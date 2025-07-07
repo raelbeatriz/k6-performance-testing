@@ -1,0 +1,47 @@
+name: Run K6 Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      resource:
+        type: choice
+        default: ingress
+        description: Select resource
+        options:
+          - ingress
+          - pod
+          - service
+      test:
+        type: choice
+        default: smoke-test
+        description: Select test
+        options:
+          - smoke-test
+          - load-test
+          - stress-test
+          - spike-test
+
+run-name: K6 run ${{ inputs.resource }}-${{ inputs.test }}
+
+jobs:
+  run-k6-test:
+    runs-on:
+      group: gha-runner-dxp
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup K6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Run K6 test
+        uses: grafana/run-k6-action@v1
+        with:
+          path: ${{ inputs.resource }}-${{ inputs.test }}.js
+
+      - name: Upload HTML report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.resource }}-${{ inputs.test }}-html-report
+          path: ${{ inputs.resource }}-${{ inputs.test }}.html
